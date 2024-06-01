@@ -1,16 +1,17 @@
 import { Pause, PlayArrow, Replay } from "@mui/icons-material";
 import { Box, Grid, IconButton, Slider, Typography } from "@mui/material";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef } from "react";
+import { useVideoDispatch, useVideoState } from "./context/video/hooks";
+import { VideoProvider } from "./context/video/provider";
+import { VideoActions } from "./context/video/state";
 
 const App: React.FC = () => {
   const video1Ref = useRef<HTMLVideoElement | null>(null);
   const video2Ref = useRef<HTMLVideoElement | null>(null);
 
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [wasPlayingBeforeDrag, setWasPlayingBeforeDrag] =
-    useState<boolean>(false);
+  const { currentTime, duration, isPlaying, wasPlayingBeforeDrag } =
+    useVideoState();
+  const dispatch = useVideoDispatch();
 
   // Sync the current time of both videos
   const syncTime = useCallback((time: number) => {
@@ -28,11 +29,11 @@ const App: React.FC = () => {
         video2Ref.current
           .play()
           .catch((error) => console.log("Error playing video 2:", error));
-        setIsPlaying(true);
+        dispatch({ type: VideoActions.SET_IS_PLAYING, payload: true });
       } else {
         video1Ref.current.pause();
         video2Ref.current.pause();
-        setIsPlaying(false);
+        dispatch({ type: VideoActions.SET_IS_PLAYING, payload: false });
       }
     }
   }, []);
@@ -40,7 +41,10 @@ const App: React.FC = () => {
   // Handle seeking by setting the current time state
   const updateCurrentTime = useCallback(
     (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-      setCurrentTime(e.currentTarget.currentTime);
+      dispatch({
+        type: VideoActions.SET_CURRENT_TIME,
+        payload: e.currentTarget.currentTime,
+      });
     },
     []
   );
@@ -50,22 +54,28 @@ const App: React.FC = () => {
     if (video1Ref.current && video2Ref.current) {
       video1Ref.current.pause();
       video2Ref.current.pause();
-      setCurrentTime(0);
-      setIsPlaying(false);
+      dispatch({ type: VideoActions.SET_CURRENT_TIME, payload: 0 });
+      dispatch({ type: VideoActions.SET_IS_PLAYING, payload: false });
     }
   }, []);
 
   // Handle slider events
   const handleSliderChange = useCallback(
     (_: Event, value: number | number[]) => {
-      setCurrentTime(value as number);
+      dispatch({
+        type: VideoActions.SET_CURRENT_TIME,
+        payload: value as number,
+      });
       syncTime(value as number);
     },
     []
   );
 
   const handleMouseDown = useCallback(() => {
-    setWasPlayingBeforeDrag(isPlaying);
+    dispatch({
+      type: VideoActions.SET_WAS_PLAYING_BEFORE_DRAG,
+      payload: isPlaying,
+    });
     handlePlayPause("pause");
   }, [isPlaying]);
 
@@ -78,7 +88,10 @@ const App: React.FC = () => {
   // Handle video metadata
   const handleLoadedMetadata = useCallback(() => {
     if (video1Ref.current) {
-      setDuration(video1Ref.current.duration);
+      dispatch({
+        type: VideoActions.SET_DURATION,
+        payload: video1Ref.current.duration,
+      });
     }
   }, []);
 
@@ -181,4 +194,8 @@ const App: React.FC = () => {
   );
 };
 
-export default App;
+export default () => (
+  <VideoProvider>
+    <App />
+  </VideoProvider>
+);
