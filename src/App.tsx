@@ -95,13 +95,54 @@ const App: React.FC = () => {
       spacing={0}
       direction="column"
       alignItems="center"
-      justifyContent="center"
       sx={{ minHeight: "100vh" }}
       px={4}
+      py={6}
     >
-      <Typography mb={4} variant="h4">
-        Synchronized Video Players
+      <Typography fontWeight={"300"} variant="h4">
+        Video sync demo
       </Typography>
+
+      <Grid justifyContent={"center"} p={2} my={2} maxWidth={"md"} container>
+        <Box
+          gap={2}
+          width={"100%"}
+          display={"flex"}
+          flexDirection={"row"}
+          alignItems={"center"}
+          justifyContent={"center"}
+          position={"relative"}
+        >
+          <IconButton onClick={handleReset}>
+            <Replay sx={{ fontSize: "1rem" }} />
+          </IconButton>
+
+          <IconButton
+            onClick={() => handlePlayPause(isPlaying ? "pause" : "play")}
+          >
+            {isPlaying ? (
+              <Pause sx={{ fontSize: "2.6rem" }} />
+            ) : (
+              <PlayArrow sx={{ fontSize: "2.6rem" }} />
+            )}
+          </IconButton>
+
+          <Typography variant="caption">{currentTime.toFixed(2)}</Typography>
+        </Box>
+
+        <Slider
+          size="small"
+          aria-label="Small"
+          valueLabelDisplay="auto"
+          min={0}
+          value={currentTime}
+          max={duration}
+          step={0.1}
+          onChange={handleSliderChange}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
+        />
+      </Grid>
 
       <Grid maxWidth={"md"} justifyContent={"center"} spacing={2} container>
         <Grid item>
@@ -135,44 +176,6 @@ const App: React.FC = () => {
             Your browser does not support the video tag.
           </video>
         </Grid>
-      </Grid>
-
-      <Grid justifyContent={"center"} p={2} mt={4} maxWidth={"md"} container>
-        <Slider
-          size="small"
-          aria-label="Small"
-          valueLabelDisplay="auto"
-          min={0}
-          value={currentTime}
-          max={duration}
-          step={0.1}
-          onChange={handleSliderChange}
-          onMouseDown={handleMouseDown}
-          onMouseUp={handleMouseUp}
-        />
-
-        <Box
-          width={"100%"}
-          display={"flex"}
-          alignItems={"center"}
-          justifyContent={"space-between"}
-        >
-          <Box>
-            <IconButton
-              onClick={() => handlePlayPause(isPlaying ? "pause" : "play")}
-            >
-              {isPlaying ? <Pause /> : <PlayArrow />}
-            </IconButton>
-
-            <IconButton onClick={handleReset}>
-              <Replay />
-            </IconButton>
-          </Box>
-
-          <Box>
-            <Typography variant="caption">{currentTime.toFixed(2)}</Typography>
-          </Box>
-        </Box>
       </Grid>
     </Grid>
   );
