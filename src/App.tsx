@@ -1,22 +1,25 @@
 import { Pause, PlayArrow, Replay } from "@mui/icons-material";
 import { Box, Grid, IconButton, Slider, Typography } from "@mui/material";
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 
 const App: React.FC = () => {
   const video1Ref = useRef<HTMLVideoElement | null>(null);
   const video2Ref = useRef<HTMLVideoElement | null>(null);
 
   const [currentTime, setCurrentTime] = useState<number>(0);
+  const [duration, setDuration] = useState<number>(0);
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
+  const [wasPlayingBeforeDrag, setWasPlayingBeforeDrag] =
+    useState<boolean>(false);
 
   // Sync the current time of both videos
-  const syncTime = (time: number) => {
+  const syncTime = useCallback((time: number) => {
     if (video1Ref.current) video1Ref.current.currentTime = time;
     if (video2Ref.current) video2Ref.current.currentTime = time;
-  };
+  }, []);
 
   // Play or pause both videos
-  const handlePlayPause = (action: "play" | "pause") => {
+  const handlePlayPause = useCallback((action: "play" | "pause") => {
     if (video1Ref.current && video2Ref.current) {
       if (action === "play") {
         video1Ref.current
@@ -32,24 +35,52 @@ const App: React.FC = () => {
         setIsPlaying(false);
       }
     }
-  };
+  }, []);
 
   // Handle seeking by setting the current time state
-  const updateCurrentTime = (
-    e: React.SyntheticEvent<HTMLVideoElement, Event>
-  ) => {
-    setCurrentTime(e.currentTarget.currentTime);
-  };
+  const updateCurrentTime = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      setCurrentTime(e.currentTarget.currentTime);
+    },
+    []
+  );
 
   // Stop both videos and reset the current time
-  const handleReset = () => {
+  const handleReset = useCallback(() => {
     if (video1Ref.current && video2Ref.current) {
       video1Ref.current.pause();
       video2Ref.current.pause();
       setCurrentTime(0);
       setIsPlaying(false);
     }
-  };
+  }, []);
+
+  // Handle slider events
+  const handleSliderChange = useCallback(
+    (_: Event, value: number | number[]) => {
+      setCurrentTime(value as number);
+      syncTime(value as number);
+    },
+    []
+  );
+
+  const handleMouseDown = useCallback(() => {
+    setWasPlayingBeforeDrag(isPlaying);
+    handlePlayPause("pause");
+  }, [isPlaying]);
+
+  const handleMouseUp = useCallback(() => {
+    if (wasPlayingBeforeDrag) {
+      handlePlayPause("play");
+    }
+  }, [wasPlayingBeforeDrag]);
+
+  // Handle video metadata
+  const handleLoadedMetadata = useCallback(() => {
+    if (video1Ref.current) {
+      setDuration(video1Ref.current.duration);
+    }
+  }, []);
 
   // Update both videos' current time whenever the state changes while not playing
   useEffect(() => {
@@ -66,6 +97,7 @@ const App: React.FC = () => {
       alignItems="center"
       justifyContent="center"
       sx={{ minHeight: "100vh" }}
+      px={4}
     >
       <Typography mb={4} variant="h4">
         Synchronized Video Players
@@ -81,6 +113,7 @@ const App: React.FC = () => {
             onPlay={() => handlePlayPause("play")}
             onPause={() => handlePlayPause("pause")}
             onTimeUpdate={updateCurrentTime}
+            onLoadedMetadata={handleLoadedMetadata}
           >
             <source src="/video.mp4" type="video/mp4" />
             Your browser does not support the video tag.
@@ -96,6 +129,7 @@ const App: React.FC = () => {
             onPlay={() => handlePlayPause("play")}
             onPause={() => handlePlayPause("pause")}
             onTimeUpdate={updateCurrentTime}
+            onLoadedMetadata={handleLoadedMetadata}
           >
             <source src="/video.mp4" type="video/mp4" />
             Your browser does not support the video tag.
@@ -106,17 +140,15 @@ const App: React.FC = () => {
       <Grid justifyContent={"center"} mt={4} maxWidth={"md"} container>
         <Slider
           size="small"
-          defaultValue={70}
           aria-label="Small"
           valueLabelDisplay="auto"
           min={0}
           value={currentTime}
-          max={video1Ref.current?.duration}
+          max={duration}
           step={0.1}
-          onChange={(_, value) => {
-            setCurrentTime(value as number);
-            syncTime(value as number);
-          }}
+          onChange={handleSliderChange}
+          onMouseDown={handleMouseDown}
+          onMouseUp={handleMouseUp}
         />
 
         <Box>
