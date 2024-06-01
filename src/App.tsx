@@ -137,7 +137,7 @@ const App: React.FC = () => {
         </Grid>
       </Grid>
 
-      <Grid justifyContent={"center"} mt={4} maxWidth={"md"} container>
+      <Grid justifyContent={"center"} p={2} mt={4} maxWidth={"md"} container>
         <Slider
           size="small"
           aria-label="Small"
@@ -151,16 +151,27 @@ const App: React.FC = () => {
           onMouseUp={handleMouseUp}
         />
 
-        <Box>
-          <IconButton
-            onClick={() => handlePlayPause(isPlaying ? "pause" : "play")}
-          >
-            {isPlaying ? <Pause /> : <PlayArrow />}
-          </IconButton>
+        <Box
+          width={"100%"}
+          display={"flex"}
+          alignItems={"center"}
+          justifyContent={"space-between"}
+        >
+          <Box>
+            <IconButton
+              onClick={() => handlePlayPause(isPlaying ? "pause" : "play")}
+            >
+              {isPlaying ? <Pause /> : <PlayArrow />}
+            </IconButton>
 
-          <IconButton onClick={handleReset}>
-            <Replay />
-          </IconButton>
+            <IconButton onClick={handleReset}>
+              <Replay />
+            </IconButton>
+          </Box>
+
+          <Box>
+            <Typography variant="caption">{currentTime.toFixed(2)}</Typography>
+          </Box>
         </Box>
       </Grid>
     </Grid>
