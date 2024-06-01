@@ -1,5 +1,6 @@
+import { Pause, PlayArrow, Replay } from "@mui/icons-material";
+import { Box, Grid, IconButton, Slider, Typography } from "@mui/material";
 import React, { useEffect, useRef, useState } from "react";
-import "./App.css";
 
 const App: React.FC = () => {
   const video1Ref = useRef<HTMLVideoElement | null>(null);
@@ -34,7 +35,9 @@ const App: React.FC = () => {
   };
 
   // Handle seeking by setting the current time state
-  const handleSeek = (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+  const updateCurrentTime = (
+    e: React.SyntheticEvent<HTMLVideoElement, Event>
+  ) => {
     setCurrentTime(e.currentTarget.currentTime);
   };
 
@@ -56,48 +59,79 @@ const App: React.FC = () => {
   }, [currentTime, isPlaying]);
 
   return (
-    <div className="App">
-      <h1>Synchronized Video Players</h1>
-      <div className="video-players">
-        <video
-          ref={video1Ref}
-          width="426"
-          height="240"
-          controls
-          onPlay={() => handlePlayPause("play")}
-          onPause={() => handlePlayPause("pause")}
-          onTimeUpdate={handleSeek}
-        >
-          <source src="/video.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-        <video
-          ref={video2Ref}
-          width="426"
-          height="240"
-          controls
-          onPlay={() => handlePlayPause("play")}
-          onPause={() => handlePlayPause("pause")}
-          onTimeUpdate={handleSeek}
-        >
-          <source src="/video.mp4" type="video/mp4" />
-          Your browser does not support the video tag.
-        </video>
-      </div>
+    <Grid
+      container
+      spacing={0}
+      direction="column"
+      alignItems="center"
+      justifyContent="center"
+      sx={{ minHeight: "100vh" }}
+    >
+      <Typography mb={4} variant="h4">
+        Synchronized Video Players
+      </Typography>
 
-      <h3>Super controls</h3>
-      <div className="controls">
-        <button onClick={() => handlePlayPause(isPlaying ? "pause" : "play")}>
-          {isPlaying ? "Pause" : "Play"}
-        </button>
+      <Grid maxWidth={"md"} justifyContent={"center"} spacing={2} container>
+        <Grid item>
+          <video
+            ref={video1Ref}
+            width="426"
+            height="240"
+            controls
+            onPlay={() => handlePlayPause("play")}
+            onPause={() => handlePlayPause("pause")}
+            onTimeUpdate={updateCurrentTime}
+          >
+            <source src="/video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </Grid>
 
-        <button onClick={handleReset}>Reset</button>
+        <Grid item>
+          <video
+            ref={video2Ref}
+            width="426"
+            height="240"
+            controls
+            onPlay={() => handlePlayPause("play")}
+            onPause={() => handlePlayPause("pause")}
+            onTimeUpdate={updateCurrentTime}
+          >
+            <source src="/video.mp4" type="video/mp4" />
+            Your browser does not support the video tag.
+          </video>
+        </Grid>
+      </Grid>
 
-        <div className="frame-slider">
-          <input type="slider" />
-        </div>
-      </div>
-    </div>
+      <Grid justifyContent={"center"} mt={4} maxWidth={"md"} container>
+        <Slider
+          size="small"
+          defaultValue={70}
+          aria-label="Small"
+          valueLabelDisplay="auto"
+          min={0}
+          value={currentTime}
+          max={video1Ref.current?.duration}
+          step={0.1}
+          onChange={(_, value) => {
+            setCurrentTime(value as number);
+            syncTime(value as number);
+          }}
+        />
+
+        <Box>
+          <IconButton
+            onClick={() => handlePlayPause(isPlaying ? "pause" : "play")}
+          >
+            {isPlaying ? <Pause /> : <PlayArrow />}
+          </IconButton>
+
+          <IconButton onClick={handleReset}>
+            <Replay />
+          </IconButton>
+        </Box>
+      </Grid>
+    </Grid>
   );
 };
 
