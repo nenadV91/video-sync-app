@@ -28,17 +28,19 @@ export function Video({ src }: { src: string }) {
   }, []);
 
   useEffect(() => {
-    if (!ref.current) return;
-    isPlaying
-      ? ref.current
-          .play()
-          .catch((error) => console.log("Error playing video", error))
-      : ref.current.pause();
+    if (ref.current) {
+      isPlaying
+        ? ref.current
+            .play()
+            .catch((error) => console.log("Error playing video", error))
+        : ref.current.pause();
+    }
   }, [isPlaying]);
 
   useEffect(() => {
-    if (!ref.current || isPlaying) return;
-    ref.current.currentTime = currentTime;
+    if (ref.current && !isPlaying) {
+      ref.current.currentTime = currentTime;
+    }
   }, [currentTime]);
 
   return (

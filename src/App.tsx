@@ -1,7 +1,8 @@
-import { Pause, PlayArrow, Replay } from "@mui/icons-material";
+import { Add, Pause, PlayArrow, Remove, Replay } from "@mui/icons-material";
 import { Box, Grid, IconButton, Slider, Typography } from "@mui/material";
 import React, { useCallback } from "react";
 import { Video } from "./components/Video";
+import { VIDEO_SRC } from "./constants";
 import { useVideoDispatch, useVideoState } from "./context/video/hooks";
 import { VideoProvider } from "./context/video/provider";
 import { VideoActions } from "./context/video/state";
@@ -47,6 +48,26 @@ const App: React.FC = () => {
     }
   }, [wasPlayingBeforeDrag]);
 
+  const handlePlayPause = useCallback(() => {
+    dispatch({
+      type: VideoActions.SET_IS_PLAYING,
+      payload: !isPlaying,
+    });
+  }, [isPlaying]);
+
+  const handleAddVideo = useCallback(() => {
+    dispatch({
+      type: VideoActions.ADD_VIDEO,
+      payload: VIDEO_SRC,
+    });
+  }, []);
+
+  const handleRemoveVideo = useCallback(() => {
+    dispatch({
+      type: VideoActions.REMOVE_LAST_VIDEO,
+    });
+  }, []);
+
   return (
     <Grid
       container
@@ -75,19 +96,20 @@ const App: React.FC = () => {
             <Replay sx={{ fontSize: "1rem" }} />
           </IconButton>
 
-          <IconButton
-            onClick={() =>
-              dispatch({
-                type: VideoActions.SET_IS_PLAYING,
-                payload: !isPlaying,
-              })
-            }
-          >
+          <IconButton onClick={handlePlayPause}>
             {isPlaying ? (
               <Pause sx={{ fontSize: "2.6rem" }} />
             ) : (
               <PlayArrow sx={{ fontSize: "2.6rem" }} />
             )}
+          </IconButton>
+
+          <IconButton disabled={videos.length >= 4} onClick={handleAddVideo}>
+            <Add sx={{ fontSize: "1rem" }} />
+          </IconButton>
+
+          <IconButton disabled={videos.length <= 2} onClick={handleRemoveVideo}>
+            <Remove sx={{ fontSize: "1rem" }} />
           </IconButton>
 
           <Typography variant="caption">{currentTime.toFixed(2)}</Typography>

@@ -57,10 +57,20 @@ export function videoReducer(
       return { ...state, wasPlayingBeforeDrag: action.payload };
 
     case VideoActions.ADD_VIDEO:
-      return { ...state, videos: [...state.videos, action.payload] };
+      return {
+        ...state,
+        videos: [...state.videos, action.payload],
+        isPlaying: false,
+        currentTime: 0,
+      };
 
     case VideoActions.REMOVE_LAST_VIDEO:
-      return { ...state, videos: state.videos.slice(0, -1) };
+      return {
+        ...state,
+        videos: state.videos.slice(0, -1),
+        isPlaying: false,
+        currentTime: 0,
+      };
 
     default:
       return { ...state };
