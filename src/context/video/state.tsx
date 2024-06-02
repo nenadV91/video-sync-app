@@ -5,6 +5,7 @@ interface VideoState {
   currentTime: number;
   duration: number;
   isPlaying: boolean;
+  isSeeking: boolean;
   wasPlayingBeforeDrag: boolean;
   videos: string[];
 }
@@ -13,6 +14,7 @@ export enum VideoActions {
   SET_CURRENT_TIME = "SET_CURRENT_TIME",
   SET_DURATION = "SET_DURATION",
   SET_IS_PLAYING = "SET_IS_PLAYING",
+  SET_IS_SEEKING = "SET_IS_SEEKING",
   SET_WAS_PLAYING_BEFORE_DRAG = "SET_WAS_PLAYING_BEFORE_DRAG",
   ADD_VIDEO = "ADD_VIDEO",
   REMOVE_LAST_VIDEO = "REMOVE_LAST_VIDEO",
@@ -22,6 +24,7 @@ type VideoAction =
   | { type: VideoActions.SET_CURRENT_TIME; payload: number }
   | { type: VideoActions.SET_DURATION; payload: number }
   | { type: VideoActions.SET_IS_PLAYING; payload: boolean }
+  | { type: VideoActions.SET_IS_SEEKING; payload: boolean }
   | { type: VideoActions.SET_WAS_PLAYING_BEFORE_DRAG; payload: boolean }
   | { type: VideoActions.ADD_VIDEO; payload: string }
   | { type: VideoActions.REMOVE_LAST_VIDEO };
@@ -36,6 +39,7 @@ export const initialState: VideoState = {
   duration: 0,
   isPlaying: false,
   wasPlayingBeforeDrag: false,
+  isSeeking: false,
   videos: initialVideosState,
 };
 
@@ -52,6 +56,9 @@ export function videoReducer(
 
     case VideoActions.SET_IS_PLAYING:
       return { ...state, isPlaying: action.payload };
+
+    case VideoActions.SET_IS_SEEKING:
+      return { ...state, isSeeking: action.payload };
 
     case VideoActions.SET_WAS_PLAYING_BEFORE_DRAG:
       return { ...state, wasPlayingBeforeDrag: action.payload };

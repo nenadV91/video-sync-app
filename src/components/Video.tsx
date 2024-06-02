@@ -1,21 +1,56 @@
 import { useCallback, useEffect, useRef } from "react";
+import { isFirefox } from "react-device-detect";
 import { useVideoDispatch, useVideoState } from "../context/video/hooks";
 import { VideoActions } from "../context/video/state";
 
 export function Video({ src }: { src: string }) {
   const ref = useRef<HTMLVideoElement | null>(null);
 
-  const { isPlaying, currentTime } = useVideoState();
+  const { isPlaying, currentTime, isSeeking } = useVideoState();
   const dispatch = useVideoDispatch();
 
   const updateCurrentTime = useCallback(
     (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      if (!isSeeking) {
+        dispatch({
+          type: VideoActions.SET_CURRENT_TIME,
+          payload: e.currentTarget.currentTime,
+        });
+      }
+    },
+    [isSeeking]
+  );
+
+  const handleSeeking = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      dispatch({
+        type: VideoActions.SET_IS_SEEKING,
+        payload: true,
+      });
+
+      if (isFirefox) {
+        dispatch({
+          type: VideoActions.SET_CURRENT_TIME,
+          payload: e.currentTarget.currentTime,
+        });
+      }
+    },
+    [isFirefox]
+  );
+
+  const handleSeeked = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      dispatch({
+        type: VideoActions.SET_IS_SEEKING,
+        payload: false,
+      });
+
       dispatch({
         type: VideoActions.SET_CURRENT_TIME,
         payload: e.currentTarget.currentTime,
       });
     },
-    []
+    [isFirefox]
   );
 
   const handleLoadedMetadata = useCallback(() => {
@@ -41,7 +76,7 @@ export function Video({ src }: { src: string }) {
     if (ref.current && !isPlaying) {
       ref.current.currentTime = currentTime;
     }
-  }, [currentTime]);
+  }, [currentTime, isPlaying]);
 
   return (
     <video
@@ -49,18 +84,20 @@ export function Video({ src }: { src: string }) {
       width="426"
       height="240"
       controls
-      onPlay={() =>
+      onPlay={() => {
         dispatch({
           type: VideoActions.SET_IS_PLAYING,
           payload: true,
-        })
-      }
+        });
+      }}
       onPause={() =>
         dispatch({
           type: VideoActions.SET_IS_PLAYING,
           payload: false,
         })
       }
+      onSeeked={handleSeeked}
+      onSeeking={handleSeeking}
       onTimeUpdate={updateCurrentTime}
       onLoadedMetadata={handleLoadedMetadata}
     >
