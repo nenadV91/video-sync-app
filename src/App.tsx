@@ -1,93 +1,72 @@
-import { Pause, PlayArrow, Replay } from "@mui/icons-material";
+import { Add, Pause, PlayArrow, Remove, Replay } from "@mui/icons-material";
 import { Box, Grid, IconButton, Slider, Typography } from "@mui/material";
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback } from "react";
+import { Video } from "./components/Video";
+import { VIDEO_SRC } from "./constants";
+import { useVideoDispatch, useVideoState } from "./context/video/hooks";
+import { VideoProvider } from "./context/video/provider";
+import { VideoActions } from "./context/video/state";
 
 const App: React.FC = () => {
-  const video1Ref = useRef<HTMLVideoElement | null>(null);
-  const video2Ref = useRef<HTMLVideoElement | null>(null);
+  const { currentTime, duration, isPlaying, wasPlayingBeforeDrag, videos } =
+    useVideoState();
+  const dispatch = useVideoDispatch();
 
-  const [currentTime, setCurrentTime] = useState<number>(0);
-  const [duration, setDuration] = useState<number>(0);
-  const [isPlaying, setIsPlaying] = useState<boolean>(false);
-  const [wasPlayingBeforeDrag, setWasPlayingBeforeDrag] =
-    useState<boolean>(false);
-
-  // Sync the current time of both videos
-  const syncTime = useCallback((time: number) => {
-    if (video1Ref.current) video1Ref.current.currentTime = time;
-    if (video2Ref.current) video2Ref.current.currentTime = time;
-  }, []);
-
-  // Play or pause both videos
-  const handlePlayPause = useCallback((action: "play" | "pause") => {
-    if (video1Ref.current && video2Ref.current) {
-      if (action === "play") {
-        video1Ref.current
-          .play()
-          .catch((error) => console.log("Error playing video 1:", error));
-        video2Ref.current
-          .play()
-          .catch((error) => console.log("Error playing video 2:", error));
-        setIsPlaying(true);
-      } else {
-        video1Ref.current.pause();
-        video2Ref.current.pause();
-        setIsPlaying(false);
-      }
-    }
-  }, []);
-
-  // Handle seeking by setting the current time state
-  const updateCurrentTime = useCallback(
-    (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
-      setCurrentTime(e.currentTarget.currentTime);
-    },
-    []
-  );
-
-  // Stop both videos and reset the current time
   const handleReset = useCallback(() => {
-    if (video1Ref.current && video2Ref.current) {
-      video1Ref.current.pause();
-      video2Ref.current.pause();
-      setCurrentTime(0);
-      setIsPlaying(false);
-    }
+    dispatch({ type: VideoActions.SET_CURRENT_TIME, payload: 0 });
+    dispatch({ type: VideoActions.SET_IS_PLAYING, payload: false });
   }, []);
 
-  // Handle slider events
   const handleSliderChange = useCallback(
     (_: Event, value: number | number[]) => {
-      setCurrentTime(value as number);
-      syncTime(value as number);
+      dispatch({
+        type: VideoActions.SET_CURRENT_TIME,
+        payload: value as number,
+      });
     },
     []
   );
 
   const handleMouseDown = useCallback(() => {
-    setWasPlayingBeforeDrag(isPlaying);
-    handlePlayPause("pause");
+    dispatch({
+      type: VideoActions.SET_WAS_PLAYING_BEFORE_DRAG,
+      payload: isPlaying,
+    });
+
+    dispatch({
+      type: VideoActions.SET_IS_PLAYING,
+      payload: false,
+    });
   }, [isPlaying]);
 
   const handleMouseUp = useCallback(() => {
     if (wasPlayingBeforeDrag) {
-      handlePlayPause("play");
+      dispatch({
+        type: VideoActions.SET_IS_PLAYING,
+        payload: true,
+      });
     }
   }, [wasPlayingBeforeDrag]);
 
-  // Handle video metadata
-  const handleLoadedMetadata = useCallback(() => {
-    if (video1Ref.current) {
-      setDuration(video1Ref.current.duration);
-    }
+  const handlePlayPause = useCallback(() => {
+    dispatch({
+      type: VideoActions.SET_IS_PLAYING,
+      payload: !isPlaying,
+    });
+  }, [isPlaying]);
+
+  const handleAddVideo = useCallback(() => {
+    dispatch({
+      type: VideoActions.ADD_VIDEO,
+      payload: VIDEO_SRC,
+    });
   }, []);
 
-  // Update both videos' current time whenever the state changes while not playing
-  useEffect(() => {
-    if (!isPlaying) {
-      syncTime(currentTime);
-    }
-  }, [currentTime, isPlaying]);
+  const handleRemoveVideo = useCallback(() => {
+    dispatch({
+      type: VideoActions.REMOVE_LAST_VIDEO,
+    });
+  }, []);
 
   return (
     <Grid
@@ -117,14 +96,20 @@ const App: React.FC = () => {
             <Replay sx={{ fontSize: "1rem" }} />
           </IconButton>
 
-          <IconButton
-            onClick={() => handlePlayPause(isPlaying ? "pause" : "play")}
-          >
+          <IconButton onClick={handlePlayPause}>
             {isPlaying ? (
               <Pause sx={{ fontSize: "2.6rem" }} />
             ) : (
               <PlayArrow sx={{ fontSize: "2.6rem" }} />
             )}
+          </IconButton>
+
+          <IconButton disabled={videos.length >= 4} onClick={handleAddVideo}>
+            <Add sx={{ fontSize: "1rem" }} />
+          </IconButton>
+
+          <IconButton disabled={videos.length <= 2} onClick={handleRemoveVideo}>
+            <Remove sx={{ fontSize: "1rem" }} />
           </IconButton>
 
           <Typography variant="caption">{currentTime.toFixed(2)}</Typography>
@@ -145,40 +130,18 @@ const App: React.FC = () => {
       </Grid>
 
       <Grid maxWidth={"md"} justifyContent={"center"} spacing={2} container>
-        <Grid item>
-          <video
-            ref={video1Ref}
-            width="426"
-            height="240"
-            controls
-            onPlay={() => handlePlayPause("play")}
-            onPause={() => handlePlayPause("pause")}
-            onTimeUpdate={updateCurrentTime}
-            onLoadedMetadata={handleLoadedMetadata}
-          >
-            <source src="/video.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </Grid>
-
-        <Grid item>
-          <video
-            ref={video2Ref}
-            width="426"
-            height="240"
-            controls
-            onPlay={() => handlePlayPause("play")}
-            onPause={() => handlePlayPause("pause")}
-            onTimeUpdate={updateCurrentTime}
-            onLoadedMetadata={handleLoadedMetadata}
-          >
-            <source src="/video.mp4" type="video/mp4" />
-            Your browser does not support the video tag.
-          </video>
-        </Grid>
+        {videos.map((src, idx) => (
+          <Grid key={idx} item>
+            <Video src={src} />
+          </Grid>
+        ))}
       </Grid>
     </Grid>
   );
 };
 
-export default App;
+export default () => (
+  <VideoProvider>
+    <App />
+  </VideoProvider>
+);
