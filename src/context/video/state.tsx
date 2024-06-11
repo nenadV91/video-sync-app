@@ -4,6 +4,7 @@ import { VIDEO_SRC } from "../../constants";
 interface VideoState {
   currentTime: number;
   duration: number;
+  playbackRate: number;
   isPlaying: boolean;
   isSeeking: boolean;
   wasPlayingBeforeDrag: boolean;
@@ -13,6 +14,7 @@ interface VideoState {
 export enum VideoActions {
   SET_CURRENT_TIME = "SET_CURRENT_TIME",
   SET_DURATION = "SET_DURATION",
+  SET_PLAYBACK_RATE = "SET_PLAYBACK_RATE",
   SET_IS_PLAYING = "SET_IS_PLAYING",
   SET_IS_SEEKING = "SET_IS_SEEKING",
   SET_WAS_PLAYING_BEFORE_DRAG = "SET_WAS_PLAYING_BEFORE_DRAG",
@@ -23,6 +25,7 @@ export enum VideoActions {
 type VideoAction =
   | { type: VideoActions.SET_CURRENT_TIME; payload: number }
   | { type: VideoActions.SET_DURATION; payload: number }
+  | { type: VideoActions.SET_PLAYBACK_RATE; payload: number }
   | { type: VideoActions.SET_IS_PLAYING; payload: boolean }
   | { type: VideoActions.SET_IS_SEEKING; payload: boolean }
   | { type: VideoActions.SET_WAS_PLAYING_BEFORE_DRAG; payload: boolean }
@@ -37,6 +40,7 @@ const initialVideosState = [VIDEO_SRC, VIDEO_SRC];
 export const initialState: VideoState = {
   currentTime: 0,
   duration: 0,
+  playbackRate: 1,
   isPlaying: false,
   wasPlayingBeforeDrag: false,
   isSeeking: false,
@@ -53,6 +57,9 @@ export function videoReducer(
 
     case VideoActions.SET_DURATION:
       return { ...state, duration: action.payload };
+
+    case VideoActions.SET_PLAYBACK_RATE:
+      return { ...state, playbackRate: action.payload };
 
     case VideoActions.SET_IS_PLAYING:
       return { ...state, isPlaying: action.payload };

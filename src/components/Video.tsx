@@ -6,7 +6,7 @@ import { VideoActions } from "../context/video/state";
 export function Video({ src }: { src: string }) {
   const ref = useRef<HTMLVideoElement | null>(null);
 
-  const { isPlaying, currentTime, isSeeking } = useVideoState();
+  const { isPlaying, currentTime, isSeeking, playbackRate } = useVideoState();
   const dispatch = useVideoDispatch();
 
   const updateCurrentTime = useCallback(
@@ -62,6 +62,30 @@ export function Video({ src }: { src: string }) {
     }
   }, []);
 
+  const handleRateChange = useCallback(
+    (e: React.SyntheticEvent<HTMLVideoElement, Event>) => {
+      dispatch({
+        type: VideoActions.SET_PLAYBACK_RATE,
+        payload: e.currentTarget.playbackRate,
+      });
+    },
+    []
+  );
+
+  const handlePlay = useCallback(() => {
+    dispatch({
+      type: VideoActions.SET_IS_PLAYING,
+      payload: true,
+    });
+  }, []);
+
+  const handlePause = useCallback(() => {
+    dispatch({
+      type: VideoActions.SET_IS_PLAYING,
+      payload: false,
+    });
+  }, []);
+
   useEffect(() => {
     if (ref.current) {
       isPlaying
@@ -78,24 +102,21 @@ export function Video({ src }: { src: string }) {
     }
   }, [currentTime, isPlaying]);
 
+  useEffect(() => {
+    if (ref.current) {
+      ref.current.playbackRate = playbackRate;
+    }
+  }, [playbackRate]);
+
   return (
     <video
       ref={ref}
       width="426"
       height="240"
       controls
-      onPlay={() => {
-        dispatch({
-          type: VideoActions.SET_IS_PLAYING,
-          payload: true,
-        });
-      }}
-      onPause={() =>
-        dispatch({
-          type: VideoActions.SET_IS_PLAYING,
-          payload: false,
-        })
-      }
+      onPlay={handlePlay}
+      onPause={handlePause}
+      onRateChange={handleRateChange}
       onSeeked={handleSeeked}
       onSeeking={handleSeeking}
       onTimeUpdate={updateCurrentTime}
